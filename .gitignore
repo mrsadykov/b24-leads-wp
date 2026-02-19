@@ -1,0 +1,12 @@
+# Внутренние/служебные документы (не нужны в дистрибутиве и в публичном репо)
+CONTEXT_B24_SITES_PROJECT.md
+BITRIX24_DEMAND_AND_FREE.md
+docs/LOCAL_TESTING.md
+docs/PUBLISHING.md
+
+# Системное и IDE
+.DS_Store
+*.log
+.idea/
+.vscode/
+node_modules/
