@@ -48,6 +48,9 @@ class B24_Leads_WPForms {
 		if ( empty( $data ) ) {
 			return;
 		}
+		$data['_form_type'] = 'wpforms';
+		$data['_form_id']   = isset( $form_data['id'] ) ? (int) $form_data['id'] : 0;
+		$data['_form_name'] = isset( $form_data['settings']['form_title'] ) ? $form_data['settings']['form_title'] : '';
 
 		do_action( 'b24_leads_wp_send_lead', $data );
 	}

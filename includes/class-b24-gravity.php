@@ -46,6 +46,9 @@ class B24_Leads_Gravity {
 		if ( empty( $data ) ) {
 			return;
 		}
+		$data['_form_type'] = 'gravity';
+		$data['_form_id']   = isset( $form['id'] ) ? (int) $form['id'] : 0;
+		$data['_form_name'] = isset( $form['title'] ) ? $form['title'] : '';
 
 		do_action( 'b24_leads_wp_send_lead', $data );
 	}

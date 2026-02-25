@@ -51,6 +51,9 @@ class B24_Leads_CF7 {
 		if ( empty( $data ) ) {
 			return;
 		}
+		$data['_form_type'] = 'cf7';
+		$data['_form_id']   = $contact_form->id();
+		$data['_form_name'] = $contact_form->title();
 
 		do_action( 'b24_leads_wp_send_lead', $data );
 	}

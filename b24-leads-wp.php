@@ -44,6 +44,8 @@ function b24_leads_wp_init() {
 	if ( class_exists( 'GFForms' ) ) {
 		B24_Leads_Gravity::instance();
 	}
+	// Хук для расширений (например Pro-add-on): подключаться после загрузки бесплатного плагина.
+	do_action( 'b24_leads_wp_loaded' );
 }
 add_action( 'plugins_loaded', 'b24_leads_wp_init', 20 );
 

@@ -101,32 +101,32 @@ class B24_Leads_Sender {
 
 	/**
 	 * Обработчик действия отправки лида.
+	 * Расширения (Pro) могут менять webhook, entity, маппинг и поля через фильтры; в $data можно передать _form_type, _form_id для привязки к форме.
 	 *
-	 * @param array $data Данные формы: name, phone, email, message, title, utm_* ...
+	 * @param array $data Данные формы: name, phone, email, message, title, utm_* ... Опционально _form_type, _form_id (не уходят в B24).
 	 */
 	public function handle_send_lead( $data ) {
 		if ( ! is_array( $data ) ) {
 			return;
 		}
 
-		$webhook = self::get_webhook_url();
+		$webhook = apply_filters( 'b24_leads_wp_webhook_url', self::get_webhook_url(), $data );
 		if ( empty( $webhook ) ) {
 			B24_Leads_Logger::log( 'skip', __( 'Вебхук не настроен. Заявка не отправлена.', 'b24-leads-wp' ), array() );
 			return;
 		}
 
-		$entity = self::get_entity_type();
+		$entity = apply_filters( 'b24_leads_wp_entity_type', self::get_entity_type(), $data );
+		$entity = in_array( $entity, array( 'lead', 'deal' ), true ) ? $entity : 'lead';
+		$stage_id = apply_filters( 'b24_leads_wp_deal_stage_id', self::get_deal_stage_id(), $data );
 		$method = $entity === 'deal' ? 'crm.deal.add' : 'crm.lead.add';
 		$fields = $this->build_b24_fields( $data );
 
-		if ( $entity === 'deal' ) {
-			$stage_id = self::get_deal_stage_id();
-			if ( $stage_id !== '' ) {
-				$fields['STAGE_ID'] = $stage_id;
-			}
+		if ( $entity === 'deal' && is_string( $stage_id ) && $stage_id !== '' ) {
+			$fields['STAGE_ID'] = $stage_id;
 		}
 
-		if ( self::get_create_contact_option() ) {
+		if ( apply_filters( 'b24_leads_wp_create_contact', self::get_create_contact_option(), $data ) ) {
 			$contact_id = $this->create_contact_in_b24( $webhook, $data );
 			if ( $contact_id ) {
 				if ( $entity === 'deal' ) {
@@ -137,6 +137,7 @@ class B24_Leads_Sender {
 			}
 		}
 
+		$fields = apply_filters( 'b24_leads_wp_b24_fields', $fields, $data );
 		if ( empty( $fields ) ) {
 			B24_Leads_Logger::log( 'skip', __( 'Нет данных для отправки (пустые поля по маппингу).', 'b24-leads-wp' ), array( 'method' => $method ) );
 			return;
@@ -197,17 +198,21 @@ class B24_Leads_Sender {
 
 	/**
 	 * Преобразует данные формы в поля B24 по маппингу.
+	 * Ключи $data, начинающиеся с _, не попадают в B24. Маппинг можно изменить через фильтр (для Pro).
 	 *
 	 * @param array $data
 	 * @return array
 	 */
 	private function build_b24_fields( $data ) {
-		$mapping = self::get_field_mapping();
+		$mapping = apply_filters( 'b24_leads_wp_field_mapping', self::get_field_mapping(), $data );
 		$data    = array_change_key_case( $data, CASE_LOWER );
 		$out     = array();
 
 		foreach ( $mapping as $form_key => $b24_key ) {
-			if ( empty( $b24_key ) || ! isset( $data[ $form_key ] ) ) {
+			if ( empty( $b24_key ) || strpos( (string) $form_key, '_' ) === 0 ) {
+				continue;
+			}
+			if ( ! isset( $data[ $form_key ] ) ) {
 				continue;
 			}
 			$value = trim( (string) $data[ $form_key ] );
@@ -248,8 +253,11 @@ class B24_Leads_Sender {
 			$out['COMMENTS'] = $utm;
 		}
 
-		// Поля формы с ключом UF_CRM_* автоматически уходят в B24 как пользовательские поля (без добавления в маппинг)
+		// Поля формы с ключом UF_CRM_* автоматически уходят в B24 как пользовательские поля (без добавления в маппинг). Ключи с _ не отправляем.
 		foreach ( $data as $form_key => $value ) {
+			if ( strpos( (string) $form_key, '_' ) === 0 ) {
+				continue;
+			}
 			if ( strpos( $form_key, 'uf_crm_' ) === 0 && is_string( $value ) && trim( $value ) !== '' ) {
 				$out[ strtoupper( $form_key ) ] = trim( $value );
 			}

@@ -65,11 +65,14 @@ class B24_Leads_Logger {
 
 	/**
 	 * Получить последние записи лога.
+	 * Лимит можно увеличить через фильтр b24_leads_wp_log_max_entries (для Pro — расширенный журнал).
 	 *
 	 * @param int $limit
 	 * @return array
 	 */
 	public static function get_entries( $limit = 50 ) {
+		$max_allowed = apply_filters( 'b24_leads_wp_log_max_entries', self::MAX_ENTRIES );
+		$limit = min( max( 1, (int) $limit ), $max_allowed );
 		$log = get_option( self::OPTION_KEY, array() );
 		if ( ! is_array( $log ) ) {
 			return array();
