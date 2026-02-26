@@ -56,6 +56,15 @@ class B24_Leads_Sender {
 	}
 
 	/**
+	 * ID воронки сделок (CATEGORY_ID) для crm.deal.add. 0 = воронка по умолчанию.
+	 *
+	 * @return int
+	 */
+	public static function get_deal_category_id() {
+		return (int) get_option( 'b24_leads_wp_deal_category_id', 0 );
+	}
+
+	/**
 	 * Этап сделки (STAGE_ID) для crm.deal.add. Пустая строка = B24 подставит этап по умолчанию.
 	 *
 	 * @return string
@@ -116,14 +125,20 @@ class B24_Leads_Sender {
 			return;
 		}
 
-		$entity = apply_filters( 'b24_leads_wp_entity_type', self::get_entity_type(), $data );
-		$entity = in_array( $entity, array( 'lead', 'deal' ), true ) ? $entity : 'lead';
-		$stage_id = apply_filters( 'b24_leads_wp_deal_stage_id', self::get_deal_stage_id(), $data );
-		$method = $entity === 'deal' ? 'crm.deal.add' : 'crm.lead.add';
-		$fields = $this->build_b24_fields( $data );
+		$entity      = apply_filters( 'b24_leads_wp_entity_type', self::get_entity_type(), $data );
+		$entity      = in_array( $entity, array( 'lead', 'deal' ), true ) ? $entity : 'lead';
+		$category_id = apply_filters( 'b24_leads_wp_deal_category_id', self::get_deal_category_id(), $data );
+		$stage_id    = apply_filters( 'b24_leads_wp_deal_stage_id', self::get_deal_stage_id(), $data );
+		$method      = $entity === 'deal' ? 'crm.deal.add' : 'crm.lead.add';
+		$fields      = $this->build_b24_fields( $data );
 
-		if ( $entity === 'deal' && is_string( $stage_id ) && $stage_id !== '' ) {
-			$fields['STAGE_ID'] = $stage_id;
+		if ( $entity === 'deal' ) {
+			if ( $category_id > 0 ) {
+				$fields['CATEGORY_ID'] = (int) $category_id;
+			}
+			if ( is_string( $stage_id ) && $stage_id !== '' ) {
+				$fields['STAGE_ID'] = $stage_id;
+			}
 		}
 
 		if ( apply_filters( 'b24_leads_wp_create_contact', self::get_create_contact_option(), $data ) ) {
@@ -306,8 +321,8 @@ class B24_Leads_Sender {
 			)
 		);
 
-		$code         = wp_remote_retrieve_response_code( $response );
-		$body_response = wp_remote_retrieve_body( $response );
+		$code          = is_wp_error( $response ) ? null : wp_remote_retrieve_response_code( $response );
+		$body_response = is_wp_error( $response ) ? '' : wp_remote_retrieve_body( $response );
 
 		// Сохраняем последний ответ для отображения в настройках (диагностика)
 		update_option( 'b24_leads_wp_last_response', array(
@@ -317,18 +332,72 @@ class B24_Leads_Sender {
 			'method' => $method,
 		), false );
 
-		$decoded = json_decode( $body_response, true );
+		$decoded   = json_decode( $body_response, true );
 		$result_id = isset( $decoded['result'] ) ? $decoded['result'] : null;
 		$error_msg = isset( $decoded['error_description'] ) ? $decoded['error_description'] : ( isset( $decoded['error'] ) ? $decoded['error'] : '' );
 
 		if ( $code === 200 && $result_id !== null ) {
 			B24_Leads_Logger::log( 'success', sprintf( __( 'Создан лид/сделка в B24 (ID: %s)', 'b24-leads-wp' ), $result_id ), array( 'method' => $method, 'id' => $result_id ) );
 		} else {
-			$log_message = sprintf( __( 'Ошибка B24: HTTP %s', 'b24-leads-wp' ), $code );
-			if ( $code === 401 || ( $error_msg && stripos( $error_msg, 'credential' ) !== false ) ) {
-				$log_message = __( 'Неверные учётные данные вебхука. Создайте новый вебхук в B24 и вставьте его URL в настройках плагина.', 'b24-leads-wp' );
-			}
+			$log_message = $this->format_b24_error_message( $response, $code, $error_msg, $body_response, $method );
 			B24_Leads_Logger::log( 'error', $log_message, array( 'method' => $method, 'code' => $code, 'response' => $body_response, 'error' => $error_msg ) );
 		}
+	}
+
+	/**
+	 * Формирует понятное описание ошибки B24 для лога.
+	 *
+	 * @param array|\WP_Error $response     Ответ wp_remote_post.
+	 * @param int|null        $code         Код HTTP или null.
+	 * @param string          $error_msg    Текст ошибки из ответа B24.
+	 * @param string          $body_response Тело ответа.
+	 * @param string          $method       Метод (crm.lead.add и т.д.).
+	 * @return string
+	 */
+	private function format_b24_error_message( $response, $code, $error_msg, $body_response, $method ) {
+		// Сетевая ошибка: таймаут, соединение отклонено и т.д.
+		if ( is_wp_error( $response ) ) {
+			return sprintf(
+				/* translators: 1: error message from WordPress (e.g. timeout, connection refused) */
+				__( 'Ошибка B24: нет ответа от сервера. Причина: %s. Проверьте доступность Bitrix24 и настройки хостинга.', 'b24-leads-wp' ),
+				$response->get_error_message()
+			);
+		}
+
+		// Нет кода ответа (редкий случай)
+		if ( empty( $code ) ) {
+			$detail = $error_msg ? $error_msg : wp_trim_words( wp_strip_all_tags( $body_response ), 15 );
+			return sprintf(
+				__( 'Ошибка B24: HTTP без кода ответа. Метод: %s. Ответ: %s', 'b24-leads-wp' ),
+				$method,
+				$detail ? $detail : __( 'пустой ответ', 'b24-leads-wp' )
+			);
+		}
+
+		// 401 / неверные учётные данные
+		if ( $code === 401 || ( $error_msg && stripos( $error_msg, 'credential' ) !== false ) ) {
+			return __( 'Неверные учётные данные вебхука. Создайте новый вебхук в B24 и вставьте его URL в настройках плагина.', 'b24-leads-wp' );
+		}
+
+		// Краткое пояснение по коду + текст от B24
+		$code_hint = array(
+			400 => __( 'неверный запрос', 'b24-leads-wp' ),
+			403 => __( 'доступ запрещён', 'b24-leads-wp' ),
+			404 => __( 'метод или вебхук не найден', 'b24-leads-wp' ),
+			500 => __( 'ошибка сервера Bitrix24', 'b24-leads-wp' ),
+			502 => __( 'сервер B24 временно недоступен', 'b24-leads-wp' ),
+			503 => __( 'сервис B24 перегружен', 'b24-leads-wp' ),
+		);
+		$hint = isset( $code_hint[ $code ] ) ? $code_hint[ $code ] : '';
+
+		$log_message = sprintf( __( 'Ошибка B24: HTTP %1$s', 'b24-leads-wp' ), $code );
+		if ( $hint ) {
+			$log_message .= ' (' . $hint . ')';
+		}
+		if ( $error_msg ) {
+			$log_message .= '. B24: ' . $error_msg;
+		}
+
+		return $log_message;
 	}
 }

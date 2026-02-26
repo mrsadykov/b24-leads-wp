@@ -100,6 +100,17 @@ class B24_Leads_Admin {
 
 		register_setting(
 			'b24_leads_wp_settings',
+			'b24_leads_wp_deal_category_id',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => function ( $v ) {
+					return absint( $v );
+				},
+			)
+		);
+
+		register_setting(
+			'b24_leads_wp_settings',
 			'b24_leads_wp_deal_stage_id',
 			array(
 				'type'              => 'string',
@@ -205,11 +216,24 @@ class B24_Leads_Admin {
 				}
 				radios.on('change', updateRow);
 				updateRow();
+				var mappingTable = $('.b24-leads-wp-mapping-table tbody');
+				var templateRow = mappingTable.find('tr.b24-extra-row-template');
+				function reindexExtraRows() {
+					mappingTable.find('tr.b24-extra-row:not(.b24-extra-row-template)').each(function(i) {
+						$(this).find('.b24-extra-input-form').attr('name', 'b24_leads_wp_field_mapping_extra[' + i + '][form]');
+						$(this).find('.b24-extra-input-b24').attr('name', 'b24_leads_wp_field_mapping_extra[' + i + '][b24]');
+					});
+				}
 				$('.b24-add-extra-row').on('click', function() {
-					var tbody = $('.b24-leads-wp-extra-mapping tbody');
-					var n = tbody.find('tr.b24-extra-row').length;
-					var tr = '<tr class=\"b24-extra-row\"><td><input type=\"text\" name=\"b24_leads_wp_field_mapping_extra[' + n + '][form]\" value=\"\" placeholder=\"company\" /></td><td><input type=\"text\" name=\"b24_leads_wp_field_mapping_extra[' + n + '][b24]\" value=\"\" placeholder=\"COMPANY_TITLE\" /></td><td></td></tr>';
-					tbody.append(tr);
+					var clone = templateRow.clone().removeClass('b24-extra-row-template').show();
+					var n = mappingTable.find('tr.b24-extra-row:not(.b24-extra-row-template)').length;
+					clone.find('.b24-extra-input-form').attr('name', 'b24_leads_wp_field_mapping_extra[' + n + '][form]');
+					clone.find('.b24-extra-input-b24').attr('name', 'b24_leads_wp_field_mapping_extra[' + n + '][b24]');
+					templateRow.before(clone);
+				});
+				mappingTable.on('click', '.b24-remove-extra-row', function() {
+					$(this).closest('tr.b24-extra-row').not('.b24-extra-row-template').remove();
+					reindexExtraRows();
 				});
 			});
 		" );
@@ -293,6 +317,24 @@ class B24_Leads_Admin {
 					</tr>
 					<tr class="b24-leads-wp-deal-option" style="<?php echo $entity_type !== 'deal' ? 'opacity: 0.6;' : ''; ?>">
 						<th scope="row">
+							<label for="b24_leads_wp_deal_category_id"><?php esc_html_e( 'ID воронки (CATEGORY_ID)', 'b24-leads-wp' ); ?></label>
+						</th>
+						<td>
+							<input type="number"
+								   id="b24_leads_wp_deal_category_id"
+								   name="b24_leads_wp_deal_category_id"
+								   value="<?php echo esc_attr( (string) get_option( 'b24_leads_wp_deal_category_id', 0 ) ); ?>"
+								   min="0"
+								   step="1"
+								   class="small-text"
+							/>
+							<p class="description">
+								<?php esc_html_e( 'Только для сделок. 0 = воронка по умолчанию. Чтобы заявки попадали в нужную воронку, укажите её ID (1, 2, 3…). Как узнать ID и код этапа — см. раздел 1.3 в документации (файл docs/VERIFY-FREE-PLUGIN.md).', 'b24-leads-wp' ); ?>
+							</p>
+						</td>
+					</tr>
+					<tr class="b24-leads-wp-deal-option" style="<?php echo $entity_type !== 'deal' ? 'opacity: 0.6;' : ''; ?>">
+						<th scope="row">
 							<label for="b24_leads_wp_deal_stage_id"><?php esc_html_e( 'Этап сделки (STAGE_ID)', 'b24-leads-wp' ); ?></label>
 						</th>
 						<td>
@@ -301,54 +343,49 @@ class B24_Leads_Admin {
 								   name="b24_leads_wp_deal_stage_id"
 								   value="<?php echo esc_attr( get_option( 'b24_leads_wp_deal_stage_id', '' ) ); ?>"
 								   class="regular-text"
-								   placeholder="NEW или PREPARATION"
+								   placeholder="NEW или C1:NEW"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Только для сделок. Код этапа воронки, в который попадут заявки. Оставьте пустым — B24 подставит первый этап по умолчанию. Примеры: NEW, PREPARATION, CLOSED_WON; для своей воронки: C1:NEW, C2:PREPARATION. Узнать коды: CRM → Настройки → Воронки продаж → этап (системное имя).', 'b24-leads-wp' ); ?>
+								<?php esc_html_e( 'Только для сделок. Код этапа воронки. Пусто = первый этап по умолчанию. Для воронки по умолчанию: NEW, PREPARATION; для своей воронки: C1:NEW, C2:PREPARATION (цифра = ID воронки). Как узнать коды — см. раздел 1.3 в docs/VERIFY-FREE-PLUGIN.md.', 'b24-leads-wp' ); ?>
 							</p>
 						</td>
 					</tr>
 				</table>
 
 				<h2 class="title"><?php esc_html_e( 'Маппинг полей формы → Битрикс24', 'b24-leads-wp' ); ?></h2>
-				<p class="description"><?php esc_html_e( 'Укажите, как имена полей из формы (name, phone, email и т.д.) соответствуют полям CRM. Ключи в нижнем регистре.', 'b24-leads-wp' ); ?></p>
-				<table class="form-table b24-leads-wp-table" role="presentation">
-					<?php
-					$form_labels = array(
-						'name'     => __( 'Имя (форма)', 'b24-leads-wp' ),
-						'phone'    => __( 'Телефон', 'b24-leads-wp' ),
-						'email'    => __( 'Email', 'b24-leads-wp' ),
-						'message'  => __( 'Сообщение', 'b24-leads-wp' ),
-						'title'    => __( 'Заголовок заявки', 'b24-leads-wp' ),
-					);
-					foreach ( $form_labels as $form_key => $label ) :
-						$b24_val = isset( $mapping[ $form_key ] ) ? $mapping[ $form_key ] : '';
-						?>
-						<tr>
-							<th scope="row"><?php echo esc_html( $label ); ?></th>
-							<td>
-								<input type="text"
-									   name="b24_leads_wp_field_mapping[<?php echo esc_attr( $form_key ); ?>]"
-									   value="<?php echo esc_attr( $b24_val ); ?>"
-									   placeholder="<?php echo esc_attr( $form_key === 'name' ? 'NAME' : ( $form_key === 'phone' ? 'PHONE' : ( $form_key === 'email' ? 'EMAIL' : ( $form_key === 'message' ? 'COMMENTS' : 'TITLE' ) ) ) ); ?>"
-								/>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-				</table>
-
-				<h3 class="title"><?php esc_html_e( 'Дополнительные поля (по желанию)', 'b24-leads-wp' ); ?></h3>
-				<p class="description"><?php esc_html_e( 'Если в форме есть поля, которых нет в списке выше (например «Компания», «Продукт»), добавьте пары: ключ поля в форме (латиница, как в форме) → код поля в B24 (например COMPANY_TITLE, UF_CRM_123). Сохраняются только заполненные пары; пустые строки после сохранения исчезнут.', 'b24-leads-wp' ); ?></p>
-				<p class="description"><strong><?php esc_html_e( 'Важно:', 'b24-leads-wp' ); ?></strong> <?php esc_html_e( 'Поля в формах на сайте добавляются в конструкторе форм (Contact Form 7, Elementor, WPForms и т.д.), а не здесь. Здесь только маппинг: «какой ключ из формы → в какое поле B24». Например, в CF7 добавьте поле с именем company — тогда данные попадут в B24 по паре company → COMPANY_TITLE.', 'b24-leads-wp' ); ?></p>
-				<table class="form-table b24-leads-wp-table b24-leads-wp-extra-mapping" role="presentation">
+				<p class="description"><?php esc_html_e( 'Укажите, как имена полей из формы соответствуют полям CRM. Ниже — стандартные поля и уже добавленные дополнительные; пустые пары при сохранении не сохраняются. После добавления или удаления строк нажмите «Сохранить изменения». Поля в формах создаются в конструкторе (CF7, WPForms и т.д.); здесь задаётся только маппинг.', 'b24-leads-wp' ); ?></p>
+				<table class="form-table b24-leads-wp-table b24-leads-wp-mapping-table" role="presentation">
 					<thead>
 						<tr>
-							<th style="width: 140px;"><?php esc_html_e( 'Ключ в форме', 'b24-leads-wp' ); ?></th>
+							<th style="width: 180px;"><?php esc_html_e( 'Ключ в форме / поле', 'b24-leads-wp' ); ?></th>
 							<th><?php esc_html_e( 'Поле в Битрикс24', 'b24-leads-wp' ); ?></th>
-							<th style="width: 80px;"></th>
+							<th style="width: 80px;"><?php esc_html_e( 'Действие', 'b24-leads-wp' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
+						<?php
+						$form_labels = array(
+							'name'     => __( 'Имя (форма)', 'b24-leads-wp' ),
+							'phone'    => __( 'Телефон', 'b24-leads-wp' ),
+							'email'    => __( 'Email', 'b24-leads-wp' ),
+							'message'  => __( 'Сообщение', 'b24-leads-wp' ),
+							'title'    => __( 'Заголовок заявки', 'b24-leads-wp' ),
+						);
+						foreach ( $form_labels as $form_key => $label ) :
+							$b24_val = isset( $mapping[ $form_key ] ) ? $mapping[ $form_key ] : '';
+							?>
+							<tr class="b24-mapping-standard-row">
+								<td><?php echo esc_html( $label ); ?></td>
+								<td>
+									<input type="text"
+										   name="b24_leads_wp_field_mapping[<?php echo esc_attr( $form_key ); ?>]"
+										   value="<?php echo esc_attr( $b24_val ); ?>"
+										   placeholder="<?php echo esc_attr( $form_key === 'name' ? 'NAME' : ( $form_key === 'phone' ? 'PHONE' : ( $form_key === 'email' ? 'EMAIL' : ( $form_key === 'message' ? 'COMMENTS' : 'TITLE' ) ) ) ); ?>"
+									/>
+								</td>
+								<td></td>
+							</tr>
+						<?php endforeach; ?>
 						<?php
 						$extra = get_option( 'b24_leads_wp_field_mapping_extra', array() );
 						if ( ! is_array( $extra ) ) {
@@ -362,11 +399,16 @@ class B24_Leads_Admin {
 							$b = isset( $row['b24'] ) ? $row['b24'] : '';
 							?>
 							<tr class="b24-extra-row">
-								<td><input type="text" name="b24_leads_wp_field_mapping_extra[<?php echo (int) $i; ?>][form]" value="<?php echo esc_attr( $f ); ?>" placeholder="company" /></td>
-								<td><input type="text" name="b24_leads_wp_field_mapping_extra[<?php echo (int) $i; ?>][b24]" value="<?php echo esc_attr( $b ); ?>" placeholder="COMPANY_TITLE" /></td>
-								<td></td>
+								<td><input type="text" class="b24-extra-input-form" name="b24_leads_wp_field_mapping_extra[<?php echo (int) $i; ?>][form]" value="<?php echo esc_attr( $f ); ?>" placeholder="company" /></td>
+								<td><input type="text" class="b24-extra-input-b24" name="b24_leads_wp_field_mapping_extra[<?php echo (int) $i; ?>][b24]" value="<?php echo esc_attr( $b ); ?>" placeholder="COMPANY_TITLE" /></td>
+								<td><button type="button" class="button button-small b24-remove-extra-row"><?php esc_html_e( 'Удалить', 'b24-leads-wp' ); ?></button></td>
 							</tr>
 						<?php endforeach; ?>
+						<tr class="b24-extra-row b24-extra-row-template" style="display:none;">
+							<td><input type="text" name="" value="" placeholder="company" class="b24-extra-input-form" /></td>
+							<td><input type="text" name="" value="" placeholder="COMPANY_TITLE" class="b24-extra-input-b24" /></td>
+							<td><button type="button" class="button button-small b24-remove-extra-row"><?php esc_html_e( 'Удалить', 'b24-leads-wp' ); ?></button></td>
+						</tr>
 					</tbody>
 				</table>
 				<p><button type="button" class="button b24-add-extra-row"><?php esc_html_e( 'Добавить поле', 'b24-leads-wp' ); ?></button></p>
