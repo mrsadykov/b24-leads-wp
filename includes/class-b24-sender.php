@@ -129,11 +129,15 @@ class B24_Leads_Sender {
 		$entity      = in_array( $entity, array( 'lead', 'deal' ), true ) ? $entity : 'lead';
 		$category_id = apply_filters( 'b24_leads_wp_deal_category_id', self::get_deal_category_id(), $data );
 		$stage_id    = apply_filters( 'b24_leads_wp_deal_stage_id', self::get_deal_stage_id(), $data );
+		// Если воронка не указана (0), но этап вида C1:NEW — определяем воронку по префиксу этапа. Этап без префикса (PREPARATION) → воронка 0 (общая).
+		if ( $entity === 'deal' && (int) $category_id === 0 && is_string( $stage_id ) && $stage_id !== '' && preg_match( '/^C(\d+):/', $stage_id, $m ) ) {
+			$category_id = (int) $m[1];
+		}
 		$method      = $entity === 'deal' ? 'crm.deal.add' : 'crm.lead.add';
 		$fields      = $this->build_b24_fields( $data );
 
 		if ( $entity === 'deal' ) {
-			if ( $category_id > 0 ) {
+			if ( (int) $category_id > 0 ) {
 				$fields['CATEGORY_ID'] = (int) $category_id;
 			}
 			if ( is_string( $stage_id ) && $stage_id !== '' ) {
