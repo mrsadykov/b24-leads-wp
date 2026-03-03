@@ -31,6 +31,7 @@ class B24_Leads_Admin {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'handle_clear_log' ) );
+		add_action( 'admin_init', array( $this, 'handle_reset_mapping' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 	}
 
@@ -49,6 +50,32 @@ class B24_Leads_Admin {
 		}
 		B24_Leads_Logger::clear();
 		wp_safe_redirect( add_query_arg( 'b24_leads_wp_log_cleared', '1', menu_page_url( 'b24-leads-wp', false ) ) );
+		exit;
+	}
+
+	/**
+	 * Сброс маппинга полей: стандартные — по умолчанию, дополнительные — пусто.
+	 */
+	public function handle_reset_mapping() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		if ( empty( $_POST['b24_leads_wp_reset_mapping'] ) || empty( $_POST['_wpnonce'] ) ) {
+			return;
+		}
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'b24_leads_wp_reset_mapping' ) ) {
+			return;
+		}
+		$defaults = array(
+			'name'    => 'NAME',
+			'phone'   => 'PHONE',
+			'email'   => 'EMAIL',
+			'message' => 'COMMENTS',
+			'title'   => 'TITLE',
+		);
+		update_option( 'b24_leads_wp_field_mapping', $defaults );
+		update_option( 'b24_leads_wp_field_mapping_extra', array() );
+		wp_safe_redirect( add_query_arg( 'b24_leads_wp_mapping_reset', '1', menu_page_url( 'b24-leads-wp', false ) ) );
 		exit;
 	}
 
@@ -141,26 +168,66 @@ class B24_Leads_Admin {
 
 	/**
 	 * Санитизация дополнительных полей маппинга (пользовательские пары форма → B24).
+	 * Берём данные из $_POST напрямую: options.php иногда передаёт в callback не тот массив.
 	 *
-	 * @param array $mapping
+	 * @param array $mapping Значение, переданное WordPress (может быть пустым или некорректным).
 	 * @return array
 	 */
 	public function sanitize_extra_mapping( $mapping ) {
-		if ( ! is_array( $mapping ) ) {
-			return array();
+		$existing = get_option( 'b24_leads_wp_field_mapping_extra', array() );
+		if ( ! is_array( $existing ) ) {
+			$existing = array();
 		}
+
+		// Всегда читаем из POST — так надёжнее для вложенных массивов.
+		if ( isset( $_POST['b24_leads_wp_field_mapping_extra'] ) && is_array( $_POST['b24_leads_wp_field_mapping_extra'] ) ) {
+			$mapping = wp_unslash( $_POST['b24_leads_wp_field_mapping_extra'] );
+		} else {
+			$mapping = array();
+		}
+
+		if ( ! is_array( $mapping ) ) {
+			return $existing;
+		}
+		if ( empty( $mapping ) && ! empty( $existing ) ) {
+			return $existing;
+		}
+
 		$out = array();
 		foreach ( $mapping as $row ) {
 			if ( ! is_array( $row ) ) {
 				continue;
 			}
-			$form_key = isset( $row['form'] ) ? sanitize_key( trim( (string) $row['form'] ) ) : '';
+			// Ключ формы: разрешаем кириллицу, пробелы, латиницу, цифры (как в конструкторах CF7/WPForms).
+			$form_key = isset( $row['form'] ) ? $this->sanitize_extra_mapping_form_key( trim( (string) $row['form'] ) ) : '';
+			// Поле B24: буквы, цифры, подчёркивание (в т.ч. UF_CRM_*).
 			$b24_key  = isset( $row['b24'] ) ? preg_replace( '/[^A-Z0-9_]/', '', strtoupper( trim( (string) $row['b24'] ) ) ) : '';
 			if ( $form_key !== '' && $b24_key !== '' ) {
 				$out[] = array( 'form' => $form_key, 'b24' => $b24_key );
 			}
 		}
+
+		// Не затирать сохранённые данные пустым результатом (потеря данных из формы и т.п.).
+		if ( empty( $out ) && ! empty( $existing ) ) {
+			return $existing;
+		}
 		return $out;
+	}
+
+	/**
+	 * Санитизация ключа поля формы для доп. маппинга: кириллица, пробелы, латиница, цифры.
+	 *
+	 * @param string $key
+	 * @return string
+	 */
+	private function sanitize_extra_mapping_form_key( $key ) {
+		$key = trim( (string) $key );
+		if ( $key === '' ) {
+			return '';
+		}
+		// Буквы (в т.ч. кириллица), цифры, пробел, подчёркивание, дефис.
+		$key = preg_replace( '/[^\p{L}\p{N}\s_\-]/u', '', $key );
+		return substr( $key, 0, 200 );
 	}
 
 	/**
@@ -265,6 +332,9 @@ class B24_Leads_Admin {
 
 			<?php if ( isset( $_GET['b24_leads_wp_log_cleared'] ) && $_GET['b24_leads_wp_log_cleared'] === '1' ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Журнал отправок очищен.', 'b24-leads-wp' ); ?></p></div>
+			<?php endif; ?>
+			<?php if ( isset( $_GET['b24_leads_wp_mapping_reset'] ) && $_GET['b24_leads_wp_mapping_reset'] === '1' ) : ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Маппинг полей сброшен: стандартные поля — по умолчанию, дополнительные — удалены.', 'b24-leads-wp' ); ?></p></div>
 			<?php endif; ?>
 
 			<p><?php esc_html_e( 'Заявки с форм сайта будут отправляться в Битрикс24 как лиды или сделки. Настройте входящий вебхук в B24 и укажите его URL ниже.', 'b24-leads-wp' ); ?></p>
@@ -391,7 +461,10 @@ class B24_Leads_Admin {
 						if ( ! is_array( $extra ) ) {
 							$extra = array();
 						}
-						if ( empty( $extra ) ) {
+						// Всегда выводим сохранённые строки; затем одну пустую для добавления новой пары (без кнопки «Добавить поле»).
+						if ( ! empty( $extra ) ) {
+							$extra[] = array( 'form' => '', 'b24' => '' );
+						} else {
 							$extra = array( array( 'form' => '', 'b24' => '' ) );
 						}
 						foreach ( $extra as $i => $row ) :
@@ -415,6 +488,14 @@ class B24_Leads_Admin {
 
 				<?php submit_button(); ?>
 			</form>
+			<p class="description">
+				<?php esc_html_e( 'Сбросить весь маппинг (стандартные поля — по умолчанию, дополнительные — удалить):', 'b24-leads-wp' ); ?>
+				<form method="post" style="display:inline; margin-left: 6px;" onsubmit="return confirm('<?php echo esc_js( __( 'Сбросить весь маппинг (стандартные — по умолчанию, дополнительные — удалить)?', 'b24-leads-wp' ) ); ?>');">
+					<?php wp_nonce_field( 'b24_leads_wp_reset_mapping', '_wpnonce' ); ?>
+					<input type="hidden" name="b24_leads_wp_reset_mapping" value="1" />
+					<?php submit_button( __( 'Сбросить маппинг', 'b24-leads-wp' ), 'secondary', 'submit', false ); ?>
+				</form>
+			</p>
 
 			<?php
 			$last = get_option( 'b24_leads_wp_last_response', null );
