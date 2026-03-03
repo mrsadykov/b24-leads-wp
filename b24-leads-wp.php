@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Заявки в Битрикс24
- * Plugin URI: https://github.com/your-repo/b24-leads-wp
+ * Plugin URI: https://github.com/mrsadykov/b24-leads-wp
  * Description: Отправка заявок с форм WordPress в Битрикс24 (лиды/сделки) по входящему вебхуку.
  * Version: 1.0.0
- * Author: B24 Leads
- * Author URI: https://github.com/your-repo
+ * Author: Iskandar Sadykov
+ * Author URI: https://t.me/sadykov1996
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: b24-leads-wp
