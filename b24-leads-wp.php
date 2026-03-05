@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Заявки в Битрикс24
+ * Plugin Name: B24 Leads for WordPress
  * Plugin URI: https://github.com/mrsadykov/b24-leads-wp
  * Description: Отправка заявок с форм WordPress в Битрикс24 (лиды/сделки) по входящему вебхуку.
  * Version: 1.0.0
