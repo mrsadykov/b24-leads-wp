@@ -372,8 +372,8 @@ class B24_Leads_Sender {
 		// Нет кода ответа (редкий случай)
 		if ( empty( $code ) ) {
 			$detail = $error_msg ? $error_msg : wp_trim_words( wp_strip_all_tags( $body_response ), 15 );
-			/* translators: 1: API method name (e.g. crm.lead.add), 2: response body or detail */
 			return sprintf(
+				/* translators: 1: API method name (e.g. crm.lead.add), 2: response body or detail */
 				__( 'Ошибка B24: HTTP без кода ответа. Метод: %1$s. Ответ: %2$s', 'b24-leads' ),
 				$method,
 				$detail ? $detail : __( 'пустой ответ', 'b24-leads' )
