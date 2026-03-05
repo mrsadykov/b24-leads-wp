@@ -1,7 +1,7 @@
 === Заявки в Битрикс24 ===
 
-Contributors: b24leads
-Tags: bitrix24, crm, leads, contact form 7, wpforms, gravity forms, elementor, forms
+Contributors: mrsadykov96
+Tags: bitrix24, contact form 7, вебхук, лиды, сделки, crm, leads, wpforms, gravity forms, elementor, forms, webhook
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
@@ -9,11 +9,11 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Отправка заявок с форм WordPress в Битрикс24 (лиды или сделки) по входящему вебхуку. В каталоге WordPress.org распространяется бесплатно. Расширенные возможности и приоритетная поддержка — по подписке на сайте автора (см. Plugin URI).
+Отправка заявок с форм WordPress (Contact Form 7, WPForms и др.) в Битрикс24: лиды и сделки по входящему вебхуку. Бесплатно в каталоге WordPress.org. Pro и поддержка — на сайте автора (Plugin URI).
 
 == Description ==
 
-Плагин отправляет данные из форм на сайте в CRM Битрикс24 как лиды или сделки. Поддерживаются Contact Form 7, Elementor Forms (Pro), WPForms, Gravity Forms; возможна отправка из любой формы через хук.
+Плагин «Заявки в Битрикс24» отправляет данные из форм на сайте в CRM Битрикс24 как **лиды** или **сделки** по **входящему вебхуку**. Поддерживаются **Contact Form 7**, Elementor Forms (Pro), WPForms, Gravity Forms; возможна отправка из любой формы через хук. Настройка вебхука, маппинг полей формы на поля B24, журнал отправок — в одном экране в админке WordPress.
 
 **Возможности:**
 
