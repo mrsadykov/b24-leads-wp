@@ -341,6 +341,7 @@ class B24_Leads_Sender {
 		$error_msg = isset( $decoded['error_description'] ) ? $decoded['error_description'] : ( isset( $decoded['error'] ) ? $decoded['error'] : '' );
 
 		if ( $code === 200 && $result_id !== null ) {
+			/* translators: %s: lead or deal ID in Bitrix24 */
 			B24_Leads_Logger::log( 'success', sprintf( __( 'Создан лид/сделка в B24 (ID: %s)', 'b24-leads' ), $result_id ), array( 'method' => $method, 'id' => $result_id ) );
 		} else {
 			$log_message = $this->format_b24_error_message( $response, $code, $error_msg, $body_response, $method );
@@ -371,8 +372,9 @@ class B24_Leads_Sender {
 		// Нет кода ответа (редкий случай)
 		if ( empty( $code ) ) {
 			$detail = $error_msg ? $error_msg : wp_trim_words( wp_strip_all_tags( $body_response ), 15 );
+			/* translators: 1: API method name, 2: response detail */
 			return sprintf(
-				__( 'Ошибка B24: HTTP без кода ответа. Метод: %s. Ответ: %s', 'b24-leads' ),
+				__( 'Ошибка B24: HTTP без кода ответа. Метод: %1$s. Ответ: %2$s', 'b24-leads' ),
 				$method,
 				$detail ? $detail : __( 'пустой ответ', 'b24-leads' )
 			);
@@ -394,6 +396,7 @@ class B24_Leads_Sender {
 		);
 		$hint = isset( $code_hint[ $code ] ) ? $code_hint[ $code ] : '';
 
+		/* translators: %s: HTTP status code */
 		$log_message = sprintf( __( 'Ошибка B24: HTTP %1$s', 'b24-leads' ), $code );
 		if ( $hint ) {
 			$log_message .= ' (' . $hint . ')';

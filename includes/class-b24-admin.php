@@ -179,9 +179,15 @@ class B24_Leads_Admin {
 			$existing = array();
 		}
 
-		// Всегда читаем из POST — так надёжнее для вложенных массивов.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return $existing;
+		}
+		if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'b24_leads_wp_settings-options' ) ) {
+			return $existing;
+		}
+
 		if ( isset( $_POST['b24_leads_wp_field_mapping_extra'] ) && is_array( $_POST['b24_leads_wp_field_mapping_extra'] ) ) {
-			$mapping = wp_unslash( $_POST['b24_leads_wp_field_mapping_extra'] );
+			$mapping = map_deep( wp_unslash( $_POST['b24_leads_wp_field_mapping_extra'] ), 'sanitize_text_field' );
 		} else {
 			$mapping = array();
 		}
