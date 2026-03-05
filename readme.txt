@@ -1,9 +1,9 @@
-=== Заявки в Битрикс24 ===
+=== B24 Leads ===
 
 Contributors: mrsadykov96
 Tags: bitrix24, contact form 7, вебхук, лиды, сделки, crm, leads, wpforms, gravity forms, elementor, forms, webhook
 Requires at least: 5.0
-Tested up to: 6.4
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later

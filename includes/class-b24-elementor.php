@@ -50,7 +50,7 @@ class B24_Leads_Elementor {
 		$data['_form_type'] = 'elementor';
 		$form_meta = $record->get( 'form' );
 		$data['_form_id']   = isset( $form_meta['id'] ) ? sanitize_key( $form_meta['id'] ) : '';
-		$data['_form_name'] = isset( $form_meta['name'] ) ? $form_meta['name'] : __( 'Elementor Form', 'b24-leads-wp' );
+		$data['_form_name'] = isset( $form_meta['name'] ) ? $form_meta['name'] : __( 'Elementor Form', 'b24-leads' );
 
 		do_action( 'b24_leads_wp_send_lead', $data );
 	}

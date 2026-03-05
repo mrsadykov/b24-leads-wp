@@ -8,7 +8,7 @@
  * Author URI: https://t.me/sadykov1996
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: b24-leads-wp
+ * Text Domain: b24-leads
  * Domain Path: /languages
  */
 
