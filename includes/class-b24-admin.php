@@ -49,7 +49,14 @@ class B24_Leads_Admin {
 			return;
 		}
 		B24_Leads_Logger::clear();
-		wp_safe_redirect( add_query_arg( 'b24_leads_wp_log_cleared', '1', menu_page_url( 'b24-leads', false ) ) );
+		$url = add_query_arg(
+			array(
+				'b24_leads_wp_log_cleared' => '1',
+				'_wpnonce'                 => wp_create_nonce( 'b24_log_cleared' ),
+			),
+			menu_page_url( 'b24-leads', false )
+		);
+		wp_safe_redirect( $url );
 		exit;
 	}
 
@@ -75,7 +82,14 @@ class B24_Leads_Admin {
 		);
 		update_option( 'b24_leads_wp_field_mapping', $defaults );
 		update_option( 'b24_leads_wp_field_mapping_extra', array() );
-		wp_safe_redirect( add_query_arg( 'b24_leads_wp_mapping_reset', '1', menu_page_url( 'b24-leads', false ) ) );
+		$url = add_query_arg(
+			array(
+				'b24_leads_wp_mapping_reset' => '1',
+				'_wpnonce'                   => wp_create_nonce( 'b24_mapping_reset' ),
+			),
+			menu_page_url( 'b24-leads', false )
+		);
+		wp_safe_redirect( $url );
 		exit;
 	}
 
@@ -336,10 +350,18 @@ class B24_Leads_Admin {
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 
-			<?php if ( isset( $_GET['b24_leads_wp_log_cleared'] ) && $_GET['b24_leads_wp_log_cleared'] === '1' ) : ?>
+			<?php
+			$log_cleared = isset( $_GET['b24_leads_wp_log_cleared'] ) && isset( $_GET['_wpnonce'] )
+				&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'b24_log_cleared' )
+				&& sanitize_text_field( wp_unslash( $_GET['b24_leads_wp_log_cleared'] ) ) === '1';
+			$mapping_reset = isset( $_GET['b24_leads_wp_mapping_reset'] ) && isset( $_GET['_wpnonce'] )
+				&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'b24_mapping_reset' )
+				&& sanitize_text_field( wp_unslash( $_GET['b24_leads_wp_mapping_reset'] ) ) === '1';
+			?>
+			<?php if ( $log_cleared ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Журнал отправок очищен.', 'b24-leads' ); ?></p></div>
 			<?php endif; ?>
-			<?php if ( isset( $_GET['b24_leads_wp_mapping_reset'] ) && $_GET['b24_leads_wp_mapping_reset'] === '1' ) : ?>
+			<?php if ( $mapping_reset ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Маппинг полей сброшен: стандартные поля — по умолчанию, дополнительные — удалены.', 'b24-leads' ); ?></p></div>
 			<?php endif; ?>
 

@@ -35,7 +35,7 @@ B24 Leads sends form data from your site to Bitrix24 CRM as **leads** or **deals
 
 == Installation ==
 
-1. Install the plugin via Plugins → Add New → Upload (ZIP) or place the `b24-leads-wp` folder in `wp-content/plugins/`.
+1. Install the plugin via Plugins → Add New → Upload (ZIP) or place the `b24-leads` folder in `wp-content/plugins/`.
 2. Activate the plugin.
 3. In Bitrix24 create an inbound webhook: Settings → Developer resources → Inbound webhook, CRM scope. Copy the URL.
 4. In WordPress: Settings → B24 Заявки — paste the webhook URL, choose Leads or Deals, and adjust field mapping if needed.
