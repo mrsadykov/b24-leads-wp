@@ -173,9 +173,7 @@ class B24_Leads_Admin {
 			'b24_leads_wp_create_contact',
 			array(
 				'type'              => 'boolean',
-				'sanitize_callback' => function ( $v ) {
-					return ! empty( $v );
-				},
+				'sanitize_callback' => 'wp_validate_boolean',
 			)
 		);
 	}
