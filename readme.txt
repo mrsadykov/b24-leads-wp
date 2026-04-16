@@ -13,6 +13,8 @@ Send form submissions (Contact Form 7, WPForms, etc.) to Bitrix24 as leads or de
 
 == Description ==
 
+**Website:** <a href="https://sadykov-i.ru/">https://sadykov-i.ru/</a> · **Pro add-on:** <a href="https://sadykov-i.ru/pro.html">Заявки в Битрикс24 — Pro</a> (requires the free plugin from this directory).
+
 **Sadykov Form Submissions for Bitrix24** sends form data from your site to Bitrix24 CRM as **leads** or **deals** via the **inbound webhook**. Supports **Contact Form 7**, Elementor Forms (Pro), WPForms, Gravity Forms; any form can send data via a hook. Configure webhook URL, map form fields to CRM fields, and view the send log in one admin screen.
 
 This plugin is an independent integration and is **not** affiliated with, endorsed by, or sponsored by Bitrix24.
