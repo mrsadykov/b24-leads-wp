@@ -61,7 +61,7 @@ CRM → Settings → Configure fields / Lead (Deal, Contact) fields. Custom fiel
 
 = Is there a paid version? =
 
-The free version is available in the WordPress.org directory. Extended features (Pro) and priority support are offered via the author’s site — use the **Plugin homepage** link in the sidebar on this plugin’s directory page (wordpress.org or your locale mirror).
+The free version is available in the WordPress.org directory. <strong>Pro</strong> features and priority support are on the author’s site: <a href="https://sadykov-i.ru/">https://sadykov-i.ru/</a>. Pro add-on: <a href="https://sadykov-i.ru/pro.html">Заявки в Битрикс24 — Pro</a> (requires the free plugin). The <strong>Plugin homepage</strong> link in the directory page sidebar also points to the author’s site.
 
 = How do I reset field mapping? =
 
