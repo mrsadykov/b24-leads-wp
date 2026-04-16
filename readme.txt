@@ -61,7 +61,7 @@ CRM → Settings → Configure fields / Lead (Deal, Contact) fields. Custom fiel
 
 = Is there a paid version? =
 
-The free version is available in the WordPress.org directory. Extended features (Pro) and priority support are offered via the author’s site — see the Plugin URI link on the plugin page.
+The free version is available in the WordPress.org directory. Extended features (Pro) and priority support are offered via the author’s site — use the **Plugin homepage** link in the sidebar on this plugin’s directory page (wordpress.org or your locale mirror).
 
 = How do I reset field mapping? =
 
