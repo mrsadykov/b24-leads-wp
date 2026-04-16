@@ -54,7 +54,7 @@ class B24_Leads_Admin {
 				'b24_leads_wp_log_cleared' => '1',
 				'_wpnonce'                 => wp_create_nonce( 'b24_log_cleared' ),
 			),
-			menu_page_url( 'b24-leads', false )
+			menu_page_url( 'sadykov-form-submissions', false )
 		);
 		wp_safe_redirect( $url );
 		exit;
@@ -87,7 +87,7 @@ class B24_Leads_Admin {
 				'b24_leads_wp_mapping_reset' => '1',
 				'_wpnonce'                   => wp_create_nonce( 'b24_mapping_reset' ),
 			),
-			menu_page_url( 'b24-leads', false )
+			menu_page_url( 'sadykov-form-submissions', false )
 		);
 		wp_safe_redirect( $url );
 		exit;
@@ -98,10 +98,10 @@ class B24_Leads_Admin {
 	 */
 	public function add_menu() {
 		add_options_page(
-			__( 'Заявки в Битрикс24', 'b24-leads' ),
-			__( 'B24 Заявки', 'b24-leads' ),
+			__( 'Sadykov — заявки в Bitrix24', 'sadykov-form-submissions' ),
+			__( 'Sadykov — Bitrix24', 'sadykov-form-submissions' ),
 			'manage_options',
-			'b24-leads',
+			'sadykov-form-submissions',
 			array( $this, 'render_page' )
 		);
 	}
@@ -284,24 +284,24 @@ class B24_Leads_Admin {
 	 * @param string $hook
 	 */
 	public function enqueue_assets( $hook ) {
-		if ( $hook !== 'settings_page_b24-leads' ) {
+		if ( $hook !== 'settings_page_sadykov-form-submissions' ) {
 			return;
 		}
 		wp_add_inline_style( 'wp-admin', '
-			.b24-leads-wp-table input[type="text"] { width: 100%; max-width: 220px; }
-			.b24-leads-wp-table th { width: 140px; }
-			.b24-leads-wp-webhook { max-width: 480px; }
+			.sfs-wp-table input[type="text"] { width: 100%; max-width: 220px; }
+			.sfs-wp-table th { width: 140px; }
+			.sfs-wp-webhook { max-width: 480px; }
 		' );
 		wp_add_inline_script( 'jquery', "
 			jQuery(function($) {
-				var row = $('.b24-leads-wp-deal-option');
+				var row = $('.sfs-wp-deal-option');
 				var radios = $('input[name=b24_leads_wp_entity_type]');
 				function updateRow() {
 					row.css('opacity', radios.filter(':checked').val() === 'deal' ? '1' : '0.6');
 				}
 				radios.on('change', updateRow);
 				updateRow();
-				var mappingTable = $('.b24-leads-wp-mapping-table tbody');
+				var mappingTable = $('.sfs-wp-mapping-table tbody');
 				var templateRow = mappingTable.find('tr.b24-extra-row-template');
 				function reindexExtraRows() {
 					mappingTable.find('tr.b24-extra-row:not(.b24-extra-row-template)').each(function(i) {
@@ -357,13 +357,13 @@ class B24_Leads_Admin {
 				&& sanitize_text_field( wp_unslash( $_GET['b24_leads_wp_mapping_reset'] ) ) === '1';
 			?>
 			<?php if ( $log_cleared ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Журнал отправок очищен.', 'b24-leads' ); ?></p></div>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Журнал отправок очищен.', 'sadykov-form-submissions' ); ?></p></div>
 			<?php endif; ?>
 			<?php if ( $mapping_reset ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Маппинг полей сброшен: стандартные поля — по умолчанию, дополнительные — удалены.', 'b24-leads' ); ?></p></div>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Маппинг полей сброшен: стандартные поля — по умолчанию, дополнительные — удалены.', 'sadykov-form-submissions' ); ?></p></div>
 			<?php endif; ?>
 
-			<p><?php esc_html_e( 'Заявки с форм сайта будут отправляться в Битрикс24 как лиды или сделки. Настройте входящий вебхук в B24 и укажите его URL ниже.', 'b24-leads' ); ?></p>
+			<p><?php esc_html_e( 'Заявки с форм сайта будут отправляться в Битрикс24 как лиды или сделки. Настройте входящий вебхук в B24 и укажите его URL ниже.', 'sadykov-form-submissions' ); ?></p>
 
 			<form action="options.php" method="post">
 				<?php settings_fields( 'b24_leads_wp_settings' ); ?>
@@ -371,49 +371,49 @@ class B24_Leads_Admin {
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">
-							<label for="b24_leads_wp_webhook_url"><?php esc_html_e( 'URL входящего вебхука B24', 'b24-leads' ); ?></label>
+							<label for="b24_leads_wp_webhook_url"><?php esc_html_e( 'URL входящего вебхука B24', 'sadykov-form-submissions' ); ?></label>
 						</th>
 						<td>
 							<input type="url"
 								   id="b24_leads_wp_webhook_url"
 								   name="b24_leads_wp_webhook_url"
 								   value="<?php echo esc_attr( $webhook_url ); ?>"
-								   class="regular-text b24-leads-wp-webhook"
+								   class="regular-text sfs-wp-webhook"
 								   placeholder="https://ваш-портал.bitrix24.ru/rest/1/xxxxxxxxxx/"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Создайте вебхук в Битрикс24: Настройки → Инструменты → Разработчикам → Входящий вебхук. Выберите права CRM. Скопируйте URL (без имени метода в конце).', 'b24-leads' ); ?>
+								<?php esc_html_e( 'Создайте вебхук в Битрикс24: Настройки → Инструменты → Разработчикам → Входящий вебхук. Выберите права CRM. Скопируйте URL (без имени метода в конце).', 'sadykov-form-submissions' ); ?>
 							</p>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Куда отправлять', 'b24-leads' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Куда отправлять', 'sadykov-form-submissions' ); ?></th>
 						<td>
 							<label>
 								<input type="radio" name="b24_leads_wp_entity_type" value="lead" <?php checked( $entity_type, 'lead' ); ?> />
-								<?php esc_html_e( 'Лиды (crm.lead.add)', 'b24-leads' ); ?>
+								<?php esc_html_e( 'Лиды (crm.lead.add)', 'sadykov-form-submissions' ); ?>
 							</label>
 							&nbsp;&nbsp;
 							<label>
 								<input type="radio" name="b24_leads_wp_entity_type" value="deal" <?php checked( $entity_type, 'deal' ); ?> />
-								<?php esc_html_e( 'Сделки (crm.deal.add)', 'b24-leads' ); ?>
+								<?php esc_html_e( 'Сделки (crm.deal.add)', 'sadykov-form-submissions' ); ?>
 							</label>
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'Создавать контакт в B24', 'b24-leads' ); ?></th>
+						<th scope="row"><?php esc_html_e( 'Создавать контакт в B24', 'sadykov-form-submissions' ); ?></th>
 						<td>
 							<input type="hidden" name="b24_leads_wp_create_contact" value="0" />
 							<label>
 								<input type="checkbox" name="b24_leads_wp_create_contact" value="1" <?php checked( get_option( 'b24_leads_wp_create_contact', false ) ); ?> />
-								<?php esc_html_e( 'Сначала создавать контакт (crm.contact.add), затем привязывать его к лиду или сделке', 'b24-leads' ); ?>
+								<?php esc_html_e( 'Сначала создавать контакт (crm.contact.add), затем привязывать его к лиду или сделке', 'sadykov-form-submissions' ); ?>
 							</label>
-							<p class="description"><?php esc_html_e( 'В B24 появится контакт с именем, телефоном и email из заявки; лид/сделка будет связан с этим контактом.', 'b24-leads' ); ?></p>
+							<p class="description"><?php esc_html_e( 'В B24 появится контакт с именем, телефоном и email из заявки; лид/сделка будет связан с этим контактом.', 'sadykov-form-submissions' ); ?></p>
 						</td>
 					</tr>
-					<tr class="b24-leads-wp-deal-option" style="<?php echo $entity_type !== 'deal' ? 'opacity: 0.6;' : ''; ?>">
+					<tr class="sfs-wp-deal-option" style="<?php echo $entity_type !== 'deal' ? 'opacity: 0.6;' : ''; ?>">
 						<th scope="row">
-							<label for="b24_leads_wp_deal_category_id"><?php esc_html_e( 'ID воронки (CATEGORY_ID)', 'b24-leads' ); ?></label>
+							<label for="b24_leads_wp_deal_category_id"><?php esc_html_e( 'ID воронки (CATEGORY_ID)', 'sadykov-form-submissions' ); ?></label>
 						</th>
 						<td>
 							<input type="number"
@@ -425,13 +425,13 @@ class B24_Leads_Admin {
 								   class="small-text"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Только для сделок. 0 = воронка по умолчанию. Чтобы заявки попадали в нужную воронку, укажите её ID (1, 2, 3…). Как узнать ID и код этапа — см. раздел 1.3 в документации (файл docs/VERIFY-FREE-PLUGIN.md).', 'b24-leads' ); ?>
+								<?php esc_html_e( 'Только для сделок. 0 = воронка по умолчанию. Чтобы заявки попадали в нужную воронку, укажите её ID (1, 2, 3…). Как узнать ID воронки и код этапа — см. README.md в папке плагина (раздел «Настройки плагина»).', 'sadykov-form-submissions' ); ?>
 							</p>
 						</td>
 					</tr>
-					<tr class="b24-leads-wp-deal-option" style="<?php echo $entity_type !== 'deal' ? 'opacity: 0.6;' : ''; ?>">
+					<tr class="sfs-wp-deal-option" style="<?php echo $entity_type !== 'deal' ? 'opacity: 0.6;' : ''; ?>">
 						<th scope="row">
-							<label for="b24_leads_wp_deal_stage_id"><?php esc_html_e( 'Этап сделки (STAGE_ID)', 'b24-leads' ); ?></label>
+							<label for="b24_leads_wp_deal_stage_id"><?php esc_html_e( 'Этап сделки (STAGE_ID)', 'sadykov-form-submissions' ); ?></label>
 						</th>
 						<td>
 							<input type="text"
@@ -442,30 +442,30 @@ class B24_Leads_Admin {
 								   placeholder="NEW или C1:NEW"
 							/>
 							<p class="description">
-								<?php esc_html_e( 'Только для сделок. Код этапа воронки. Пусто = первый этап по умолчанию. Для воронки по умолчанию: NEW, PREPARATION; для своей воронки: C1:NEW, C2:PREPARATION (цифра = ID воронки). Как узнать коды — см. раздел 1.3 в docs/VERIFY-FREE-PLUGIN.md.', 'b24-leads' ); ?>
+								<?php esc_html_e( 'Только для сделок. Код этапа воронки. Пусто = первый этап по умолчанию. Для воронки по умолчанию: NEW, PREPARATION; для своей воронки: C1:NEW, C2:PREPARATION (цифра после C = ID воронки). Подробнее — README.md в папке плагина.', 'sadykov-form-submissions' ); ?>
 							</p>
 						</td>
 					</tr>
 				</table>
 
-				<h2 class="title"><?php esc_html_e( 'Маппинг полей формы → Битрикс24', 'b24-leads' ); ?></h2>
-				<p class="description"><?php esc_html_e( 'Укажите, как имена полей из формы соответствуют полям CRM. Ниже — стандартные поля и уже добавленные дополнительные; пустые пары при сохранении не сохраняются. После добавления или удаления строк нажмите «Сохранить изменения». Поля в формах создаются в конструкторе (CF7, WPForms и т.д.); здесь задаётся только маппинг.', 'b24-leads' ); ?></p>
-				<table class="form-table b24-leads-wp-table b24-leads-wp-mapping-table" role="presentation">
+				<h2 class="title"><?php esc_html_e( 'Маппинг полей формы → Битрикс24', 'sadykov-form-submissions' ); ?></h2>
+				<p class="description"><?php esc_html_e( 'Укажите, как имена полей из формы соответствуют полям CRM. Ниже — стандартные поля и уже добавленные дополнительные; пустые пары при сохранении не сохраняются. После добавления или удаления строк нажмите «Сохранить изменения». Поля в формах создаются в конструкторе (CF7, WPForms и т.д.); здесь задаётся только маппинг.', 'sadykov-form-submissions' ); ?></p>
+				<table class="form-table sfs-wp-table sfs-wp-mapping-table" role="presentation">
 					<thead>
 						<tr>
-							<th style="width: 180px;"><?php esc_html_e( 'Ключ в форме / поле', 'b24-leads' ); ?></th>
-							<th><?php esc_html_e( 'Поле в Битрикс24', 'b24-leads' ); ?></th>
-							<th style="width: 80px;"><?php esc_html_e( 'Действие', 'b24-leads' ); ?></th>
+							<th style="width: 180px;"><?php esc_html_e( 'Ключ в форме / поле', 'sadykov-form-submissions' ); ?></th>
+							<th><?php esc_html_e( 'Поле в Битрикс24', 'sadykov-form-submissions' ); ?></th>
+							<th style="width: 80px;"><?php esc_html_e( 'Действие', 'sadykov-form-submissions' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php
 						$form_labels = array(
-							'name'     => __( 'Имя (форма)', 'b24-leads' ),
-							'phone'    => __( 'Телефон', 'b24-leads' ),
-							'email'    => __( 'Email', 'b24-leads' ),
-							'message'  => __( 'Сообщение', 'b24-leads' ),
-							'title'    => __( 'Заголовок заявки', 'b24-leads' ),
+							'name'     => __( 'Имя (форма)', 'sadykov-form-submissions' ),
+							'phone'    => __( 'Телефон', 'sadykov-form-submissions' ),
+							'email'    => __( 'Email', 'sadykov-form-submissions' ),
+							'message'  => __( 'Сообщение', 'sadykov-form-submissions' ),
+							'title'    => __( 'Заголовок заявки', 'sadykov-form-submissions' ),
 						);
 						foreach ( $form_labels as $form_key => $label ) :
 							$b24_val = isset( $mapping[ $form_key ] ) ? $mapping[ $form_key ] : '';
@@ -500,28 +500,28 @@ class B24_Leads_Admin {
 							<tr class="b24-extra-row">
 								<td><input type="text" class="b24-extra-input-form" name="b24_leads_wp_field_mapping_extra[<?php echo (int) $i; ?>][form]" value="<?php echo esc_attr( $f ); ?>" placeholder="company" /></td>
 								<td><input type="text" class="b24-extra-input-b24" name="b24_leads_wp_field_mapping_extra[<?php echo (int) $i; ?>][b24]" value="<?php echo esc_attr( $b ); ?>" placeholder="COMPANY_TITLE" /></td>
-								<td><button type="button" class="button button-small b24-remove-extra-row"><?php esc_html_e( 'Удалить', 'b24-leads' ); ?></button></td>
+								<td><button type="button" class="button button-small b24-remove-extra-row"><?php esc_html_e( 'Удалить', 'sadykov-form-submissions' ); ?></button></td>
 							</tr>
 						<?php endforeach; ?>
 						<tr class="b24-extra-row b24-extra-row-template" style="display:none;">
 							<td><input type="text" name="" value="" placeholder="company" class="b24-extra-input-form" /></td>
 							<td><input type="text" name="" value="" placeholder="COMPANY_TITLE" class="b24-extra-input-b24" /></td>
-							<td><button type="button" class="button button-small b24-remove-extra-row"><?php esc_html_e( 'Удалить', 'b24-leads' ); ?></button></td>
+							<td><button type="button" class="button button-small b24-remove-extra-row"><?php esc_html_e( 'Удалить', 'sadykov-form-submissions' ); ?></button></td>
 						</tr>
 					</tbody>
 				</table>
-				<p><button type="button" class="button b24-add-extra-row"><?php esc_html_e( 'Добавить поле', 'b24-leads' ); ?></button></p>
+				<p><button type="button" class="button b24-add-extra-row"><?php esc_html_e( 'Добавить поле', 'sadykov-form-submissions' ); ?></button></p>
 
 				<?php submit_button(); ?>
 			</form>
-			<p class="description">
-				<?php esc_html_e( 'Сбросить весь маппинг (стандартные поля — по умолчанию, дополнительные — удалить):', 'b24-leads' ); ?>
-				<form method="post" style="display:inline; margin-left: 6px;" onsubmit="return confirm('<?php echo esc_js( __( 'Сбросить весь маппинг (стандартные — по умолчанию, дополнительные — удалить)?', 'b24-leads' ) ); ?>');">
+			<div class="description">
+				<?php esc_html_e( 'Сбросить весь маппинг (стандартные поля — по умолчанию, дополнительные — удалить):', 'sadykov-form-submissions' ); ?>
+				<form method="post" class="sfs-wp-inline-form" style="display:inline; margin-left: 6px;" onsubmit="return confirm('<?php echo esc_js( __( 'Сбросить весь маппинг (стандартные — по умолчанию, дополнительные — удалить)?', 'sadykov-form-submissions' ) ); ?>');">
 					<?php wp_nonce_field( 'b24_leads_wp_reset_mapping', '_wpnonce' ); ?>
 					<input type="hidden" name="b24_leads_wp_reset_mapping" value="1" />
-					<?php submit_button( __( 'Сбросить маппинг', 'b24-leads' ), 'secondary', 'submit', false ); ?>
+					<?php submit_button( __( 'Сбросить маппинг', 'sadykov-form-submissions' ), 'secondary', 'submit', false ); ?>
 				</form>
-			</p>
+			</div>
 
 			<?php
 			$last = get_option( 'b24_leads_wp_last_response', null );
@@ -529,23 +529,23 @@ class B24_Leads_Admin {
 				$is_ok = isset( $last['code'] ) && (int) $last['code'] === 200;
 				?>
 				<hr />
-				<h2><?php esc_html_e( 'Последний ответ Битрикс24 (диагностика)', 'b24-leads' ); ?></h2>
-				<p><strong><?php esc_html_e( 'Время запроса:', 'b24-leads' ); ?></strong> <?php echo esc_html( $last['time'] ); ?>
-					| <strong><?php esc_html_e( 'Метод:', 'b24-leads' ); ?></strong> <?php echo esc_html( isset( $last['method'] ) ? $last['method'] : '-' ); ?>
-					| <strong><?php esc_html_e( 'HTTP-код:', 'b24-leads' ); ?></strong>
+				<h2><?php esc_html_e( 'Последний ответ Битрикс24 (диагностика)', 'sadykov-form-submissions' ); ?></h2>
+				<p><strong><?php esc_html_e( 'Время запроса:', 'sadykov-form-submissions' ); ?></strong> <?php echo esc_html( $last['time'] ); ?>
+					| <strong><?php esc_html_e( 'Метод:', 'sadykov-form-submissions' ); ?></strong> <?php echo esc_html( isset( $last['method'] ) ? $last['method'] : '-' ); ?>
+					| <strong><?php esc_html_e( 'HTTP-код:', 'sadykov-form-submissions' ); ?></strong>
 					<span style="color: <?php echo $is_ok ? 'green' : 'red'; ?>;"><?php echo esc_html( isset( $last['code'] ) ? $last['code'] : '-' ); ?></span>
 				</p>
 				<?php if ( ! empty( $last['body'] ) ) : ?>
 					<details>
-						<summary><?php esc_html_e( 'Тело ответа', 'b24-leads' ); ?></summary>
+						<summary><?php esc_html_e( 'Тело ответа', 'sadykov-form-submissions' ); ?></summary>
 						<pre style="background: #f5f5f5; padding: 10px; overflow: auto; max-height: 200px;"><?php echo esc_html( $last['body'] ); ?></pre>
 					</details>
 				<?php endif; ?>
-				<p class="description"><?php esc_html_e( 'Отправьте форму на сайте и обновите эту страницу — здесь появится ответ от B24. Код 200 и result с id лида означают успех.', 'b24-leads' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Отправьте форму на сайте и обновите эту страницу — здесь появится ответ от B24. Код 200 и result с id лида означают успех.', 'sadykov-form-submissions' ); ?></p>
 			<?php endif; ?>
 
 			<hr />
-			<h2><?php esc_html_e( 'Журнал отправок', 'b24-leads' ); ?></h2>
+			<h2><?php esc_html_e( 'Журнал отправок', 'sadykov-form-submissions' ); ?></h2>
 			<?php
 			$log_entries = B24_Leads_Logger::get_entries( 50 );
 			if ( ! empty( $log_entries ) ) :
@@ -553,14 +553,14 @@ class B24_Leads_Admin {
 				<form method="post" style="margin-bottom: 12px;">
 					<?php wp_nonce_field( 'b24_leads_wp_clear_log', '_wpnonce' ); ?>
 					<input type="hidden" name="b24_leads_wp_clear_log" value="1" />
-					<?php submit_button( __( 'Очистить журнал', 'b24-leads' ), 'secondary', 'submit', false ); ?>
+					<?php submit_button( __( 'Очистить журнал', 'sadykov-form-submissions' ), 'secondary', 'submit', false ); ?>
 				</form>
 				<table class="wp-list-table widefat fixed striped">
 					<thead>
 						<tr>
-							<th style="width: 140px;"><?php esc_html_e( 'Время', 'b24-leads' ); ?></th>
-							<th style="width: 80px;"><?php esc_html_e( 'Тип', 'b24-leads' ); ?></th>
-							<th><?php esc_html_e( 'Сообщение', 'b24-leads' ); ?></th>
+							<th style="width: 140px;"><?php esc_html_e( 'Время', 'sadykov-form-submissions' ); ?></th>
+							<th style="width: 80px;"><?php esc_html_e( 'Тип', 'sadykov-form-submissions' ); ?></th>
+							<th><?php esc_html_e( 'Сообщение', 'sadykov-form-submissions' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -570,9 +570,9 @@ class B24_Leads_Admin {
 								<td>
 									<?php
 									$type_labels = array(
-										'success' => __( 'Успех', 'b24-leads' ),
-										'error'   => __( 'Ошибка', 'b24-leads' ),
-										'skip'    => __( 'Пропуск', 'b24-leads' ),
+										'success' => __( 'Успех', 'sadykov-form-submissions' ),
+										'error'   => __( 'Ошибка', 'sadykov-form-submissions' ),
+										'skip'    => __( 'Пропуск', 'sadykov-form-submissions' ),
 									);
 									$label = isset( $type_labels[ $entry['type'] ] ) ? $type_labels[ $entry['type'] ] : $entry['type'];
 									$color = $entry['type'] === 'success' ? 'green' : ( $entry['type'] === 'error' ? 'red' : 'gray' );
@@ -593,17 +593,17 @@ class B24_Leads_Admin {
 					</tbody>
 				</table>
 			<?php else : ?>
-				<p class="description"><?php esc_html_e( 'Записей пока нет. Отправьте форму на сайте — здесь появятся успешные отправки и ошибки.', 'b24-leads' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Записей пока нет. Отправьте форму на сайте — здесь появятся успешные отправки и ошибки.', 'sadykov-form-submissions' ); ?></p>
 			<?php endif; ?>
 
 			<hr />
-			<h2><?php esc_html_e( 'Как подключить формы', 'b24-leads' ); ?></h2>
+			<h2><?php esc_html_e( 'Как подключить формы', 'sadykov-form-submissions' ); ?></h2>
 			<ul style="list-style: disc; margin-left: 1.5em;">
-				<li><?php esc_html_e( 'Contact Form 7: заявки отправляются в B24 автоматически после отправки формы.', 'b24-leads' ); ?></li>
-				<li><?php esc_html_e( 'Elementor Forms (Elementor Pro): заявки с виджета «Форма» уходят в B24 автоматически.', 'b24-leads' ); ?></li>
-				<li><?php esc_html_e( 'WPForms: заявки отправляются в B24 после успешной отправки формы.', 'b24-leads' ); ?></li>
-				<li><?php esc_html_e( 'Gravity Forms: заявки отправляются в B24 после отправки формы.', 'b24-leads' ); ?></li>
-				<li><?php esc_html_e( 'Любая форма/тема: вызовите в коде do_action( \'b24_leads_wp_send_lead\', $data ); где $data — массив с ключами name, phone, email, message (и при необходимости title, utm_source, utm_medium, utm_campaign).', 'b24-leads' ); ?></li>
+				<li><?php esc_html_e( 'Contact Form 7: заявки отправляются в B24 автоматически после отправки формы.', 'sadykov-form-submissions' ); ?></li>
+				<li><?php esc_html_e( 'Elementor Forms (Elementor Pro): заявки с виджета «Форма» уходят в B24 автоматически.', 'sadykov-form-submissions' ); ?></li>
+				<li><?php esc_html_e( 'WPForms: заявки отправляются в B24 после успешной отправки формы.', 'sadykov-form-submissions' ); ?></li>
+				<li><?php esc_html_e( 'Gravity Forms: заявки отправляются в B24 после отправки формы.', 'sadykov-form-submissions' ); ?></li>
+				<li><?php esc_html_e( 'Любая форма/тема: вызовите в коде do_action( \'b24_leads_wp_send_lead\', $data ); где $data — массив с ключами name, phone, email, message (и при необходимости title, utm_source, utm_medium, utm_campaign).', 'sadykov-form-submissions' ); ?></li>
 			</ul>
 		</div>
 		<?php

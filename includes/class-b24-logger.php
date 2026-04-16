@@ -54,7 +54,7 @@ class B24_Leads_Logger {
 		update_option( self::OPTION_KEY, $log, false );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			$line = sprintf( '[B24 Leads WP] %s %s — %s', strtoupper( $type ), $entry['time'], $message );
+			$line = sprintf( '[Sadykov Form Submissions for Bitrix24] %s %s — %s', strtoupper( $type ), $entry['time'], $message );
 			if ( ! empty( $detail ) ) {
 				$line .= ' ' . wp_json_encode( $detail );
 			}

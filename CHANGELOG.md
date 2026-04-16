@@ -4,6 +4,29 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/).
 
+## [1.1.0] — 2026-04-12
+
+### Изменено
+
+- Требования WordPress.org к названию и slug: плагин переименован в **Sadykov Form Submissions for Bitrix24**, slug и text domain — **sadykov-form-submissions**; в описании указано, что интеграция неофициальная и не аффилирована с Bitrix24.
+- Пункт меню: **Sadykov — Bitrix24**; префиксы в логах отладки обновлены.
+
+## [1.0.1] — 2026-04-08
+
+### Исправлено
+
+- `register_setting` для `b24_leads_wp_create_contact`: санитизация через `wp_validate_boolean` (требование ревью WordPress.org).
+- Разметка админки: форма сброса маппинга не вложена в `<p>` (валидный HTML).
+- Тексты подсказок: ссылка на несуществующий `docs/VERIFY-FREE-PLUGIN.md` заменена на **README.md** в папке плагина.
+
+### Добавлено
+
+- `uninstall.php` — при удалении плагина из админки удаляются все опции плагина.
+
+### Прочее
+
+- Версия 1.0.1 (согласована с именем архива для каталога).
+
 ## [1.0.0] — 2025-02-19
 
 ### Добавлено
@@ -29,4 +52,6 @@
 - Логирование в wp-content/debug.log при включённых WP_DEBUG и WP_DEBUG_LOG.
 - Фильтры для данных форм: b24_leads_wp_cf7_data, b24_leads_wp_elementor_data, b24_leads_wp_wpforms_data, b24_leads_wp_gravity_data.
 
-[1.0.0]: https://github.com/your-repo/b24-leads-wp/releases/tag/v1.0.0
+[1.1.0]: https://github.com/mrsadykov/b24-leads-wp/releases/tag/v1.1.0
+[1.0.1]: https://github.com/mrsadykov/b24-leads-wp/releases/tag/v1.0.1
+[1.0.0]: https://github.com/mrsadykov/b24-leads-wp/releases/tag/v1.0.0

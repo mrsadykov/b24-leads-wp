@@ -121,7 +121,7 @@ class B24_Leads_Sender {
 
 		$webhook = apply_filters( 'b24_leads_wp_webhook_url', self::get_webhook_url(), $data );
 		if ( empty( $webhook ) ) {
-			B24_Leads_Logger::log( 'skip', __( 'Вебхук не настроен. Заявка не отправлена.', 'b24-leads' ), array() );
+			B24_Leads_Logger::log( 'skip', __( 'Вебхук не настроен. Заявка не отправлена.', 'sadykov-form-submissions' ), array() );
 			return;
 		}
 
@@ -158,7 +158,7 @@ class B24_Leads_Sender {
 
 		$fields = apply_filters( 'b24_leads_wp_b24_fields', $fields, $data );
 		if ( empty( $fields ) ) {
-			B24_Leads_Logger::log( 'skip', __( 'Нет данных для отправки (пустые поля по маппингу).', 'b24-leads' ), array( 'method' => $method ) );
+			B24_Leads_Logger::log( 'skip', __( 'Нет данных для отправки (пустые поля по маппингу).', 'sadykov-form-submissions' ), array( 'method' => $method ) );
 			return;
 		}
 
@@ -179,7 +179,7 @@ class B24_Leads_Sender {
 		$email = trim( (string) ( isset( $data['email'] ) ? $data['email'] : '' ) );
 
 		if ( $name === '' ) {
-			$name = $email !== '' ? $email : ( $phone !== '' ? $phone : __( 'Контакт с сайта', 'b24-leads' ) );
+			$name = $email !== '' ? $email : ( $phone !== '' ? $phone : __( 'Контакт с сайта', 'sadykov-form-submissions' ) );
 		}
 
 		$fields = array( 'NAME' => $name );
@@ -210,7 +210,7 @@ class B24_Leads_Sender {
 		}
 		if ( $code !== 200 && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( 'B24 Leads WP: crm.contact.add failed ' . $code . ' — ' . $body );
+			error_log( 'Sadykov Bitrix24 forms: crm.contact.add failed ' . $code . ' — ' . $body );
 		}
 		return null;
 	}
@@ -254,7 +254,7 @@ class B24_Leads_Sender {
 
 		// Заголовок лида/сделки: если не передан, формируем «Заявка с сайта — Имя» (в списке B24 сразу видно, что это заявка)
 		if ( empty( $out['TITLE'] ) ) {
-			$base = __( 'Заявка с сайта', 'b24-leads' );
+			$base = __( 'Заявка с сайта', 'sadykov-form-submissions' );
 			if ( ! empty( $data['name'] ) ) {
 				$base .= ' — ' . trim( (string) $data['name'] );
 			}
@@ -342,7 +342,7 @@ class B24_Leads_Sender {
 
 		if ( $code === 200 && $result_id !== null ) {
 			/* translators: %s: lead or deal ID in Bitrix24 */
-			B24_Leads_Logger::log( 'success', sprintf( __( 'Создан лид/сделка в B24 (ID: %s)', 'b24-leads' ), $result_id ), array( 'method' => $method, 'id' => $result_id ) );
+			B24_Leads_Logger::log( 'success', sprintf( __( 'Создан лид/сделка в B24 (ID: %s)', 'sadykov-form-submissions' ), $result_id ), array( 'method' => $method, 'id' => $result_id ) );
 		} else {
 			$log_message = $this->format_b24_error_message( $response, $code, $error_msg, $body_response, $method );
 			B24_Leads_Logger::log( 'error', $log_message, array( 'method' => $method, 'code' => $code, 'response' => $body_response, 'error' => $error_msg ) );
@@ -364,7 +364,7 @@ class B24_Leads_Sender {
 		if ( is_wp_error( $response ) ) {
 			return sprintf(
 				/* translators: 1: error message from WordPress (e.g. timeout, connection refused) */
-				__( 'Ошибка B24: нет ответа от сервера. Причина: %s. Проверьте доступность Bitrix24 и настройки хостинга.', 'b24-leads' ),
+				__( 'Ошибка B24: нет ответа от сервера. Причина: %s. Проверьте доступность Bitrix24 и настройки хостинга.', 'sadykov-form-submissions' ),
 				$response->get_error_message()
 			);
 		}
@@ -374,30 +374,30 @@ class B24_Leads_Sender {
 			$detail = $error_msg ? $error_msg : wp_trim_words( wp_strip_all_tags( $body_response ), 15 );
 			return sprintf(
 				/* translators: 1: API method name (e.g. crm.lead.add), 2: response body or detail */
-				__( 'Ошибка B24: HTTP без кода ответа. Метод: %1$s. Ответ: %2$s', 'b24-leads' ),
+				__( 'Ошибка B24: HTTP без кода ответа. Метод: %1$s. Ответ: %2$s', 'sadykov-form-submissions' ),
 				$method,
-				$detail ? $detail : __( 'пустой ответ', 'b24-leads' )
+				$detail ? $detail : __( 'пустой ответ', 'sadykov-form-submissions' )
 			);
 		}
 
 		// 401 / неверные учётные данные
 		if ( $code === 401 || ( $error_msg && stripos( $error_msg, 'credential' ) !== false ) ) {
-			return __( 'Неверные учётные данные вебхука. Создайте новый вебхук в B24 и вставьте его URL в настройках плагина.', 'b24-leads' );
+			return __( 'Неверные учётные данные вебхука. Создайте новый вебхук в B24 и вставьте его URL в настройках плагина.', 'sadykov-form-submissions' );
 		}
 
 		// Краткое пояснение по коду + текст от B24
 		$code_hint = array(
-			400 => __( 'неверный запрос', 'b24-leads' ),
-			403 => __( 'доступ запрещён', 'b24-leads' ),
-			404 => __( 'метод или вебхук не найден', 'b24-leads' ),
-			500 => __( 'ошибка сервера Bitrix24', 'b24-leads' ),
-			502 => __( 'сервер B24 временно недоступен', 'b24-leads' ),
-			503 => __( 'сервис B24 перегружен', 'b24-leads' ),
+			400 => __( 'неверный запрос', 'sadykov-form-submissions' ),
+			403 => __( 'доступ запрещён', 'sadykov-form-submissions' ),
+			404 => __( 'метод или вебхук не найден', 'sadykov-form-submissions' ),
+			500 => __( 'ошибка сервера Bitrix24', 'sadykov-form-submissions' ),
+			502 => __( 'сервер B24 временно недоступен', 'sadykov-form-submissions' ),
+			503 => __( 'сервис B24 перегружен', 'sadykov-form-submissions' ),
 		);
 		$hint = isset( $code_hint[ $code ] ) ? $code_hint[ $code ] : '';
 
 		/* translators: %s: HTTP status code */
-		$log_message = sprintf( __( 'Ошибка B24: HTTP %1$s', 'b24-leads' ), $code );
+		$log_message = sprintf( __( 'Ошибка B24: HTTP %1$s', 'sadykov-form-submissions' ), $code );
 		if ( $hint ) {
 			$log_message .= ' (' . $hint . ')';
 		}

@@ -1,19 +1,19 @@
 <?php
 /**
- * Plugin Name: B24 Leads
- * Plugin URI: https://github.com/mrsadykov/b24-leads-wp
- * Description: Отправка заявок с форм WordPress в Битрикс24 (лиды/сделки) по входящему вебхуку.
- * Version: 1.0.0
+ * Plugin Name: Sadykov Form Submissions for Bitrix24
+ * Plugin URI: https://sadykov-i.ru/
+ * Description: Send WordPress form submissions to Bitrix24 as leads or deals (unofficial integration; not affiliated with Bitrix24).
+ * Version: 1.1.0
  * Author: Iskandar Sadykov
  * Author URI: https://t.me/sadykov1996
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: b24-leads
+ * Text Domain: sadykov-form-submissions
  */
 
 defined( 'ABSPATH' ) || exit;
 
-const B24_LEADS_WP_VERSION = '1.0.0';
+const B24_LEADS_WP_VERSION = '1.1.0';
 const B24_LEADS_WP_PLUGIN_FILE = __FILE__;
 const B24_LEADS_WP_PLUGIN_DIR = __DIR__;
 
